@@ -13,7 +13,7 @@
         }
         
         .container {
-            max-width: 1200px;
+            max-width: 1400px;
             margin: 0 auto;
             background: white;
             padding: 20px;
@@ -48,7 +48,7 @@
         }
         
         .controls {
-            width: 300px;
+            width: 350px;
             background: #ecf0f1;
             padding: 15px;
             border-radius: 5px;
@@ -69,11 +69,12 @@
             background: #3498db;
             color: white;
             border: none;
-            padding: 10px 15px;
+            padding: 8px 12px;
             border-radius: 5px;
             cursor: pointer;
             margin: 2px;
-            font-size: 14px;
+            font-size: 12px;
+            transition: background-color 0.3s;
         }
         
         button:hover {
@@ -84,14 +85,31 @@
             background: #e74c3c;
         }
         
+        button.test-btn {
+            background: #27ae60;
+            font-size: 11px;
+            padding: 6px 10px;
+        }
+        
+        button.test-btn:hover {
+            background: #229954;
+        }
+        
+        .test-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 5px;
+            margin-bottom: 10px;
+        }
+        
         .test-results {
             background: #2c3e50;
             color: white;
             padding: 15px;
             border-radius: 5px;
             font-family: monospace;
-            font-size: 14px;
-            max-height: 300px;
+            font-size: 13px;
+            max-height: 350px;
             overflow-y: auto;
         }
         
@@ -116,12 +134,26 @@
             padding: 5px;
             border-radius: 3px;
             border: 1px solid #bdc3c7;
+            margin-bottom: 5px;
         }
+        
+        .stats-panel {
+            background: #8e44ad;
+            color: white;
+            padding: 10px;
+            border-radius: 5px;
+            margin-bottom: 10px;
+            font-size: 12px;
+        }
+        
+        .success { color: #2ecc71; }
+        .error { color: #e74c3c; }
+        .warning { color: #f39c12; }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>🚂 Jeu de Routes - Les Aventuriers du Rail</h1>
+        <h1>Jeu de Routes - Les Aventuriers du Rail</h1>
         
         <div class="game-area">
             <div class="canvas-container">
@@ -130,35 +162,56 @@
             
             <div class="controls">
                 <div class="info-panel">
-                    <strong>État du Jeu</strong>
+                    <strong>Etat du Jeu</strong>
                     <div id="gameStatus">Initialisation...</div>
                 </div>
                 
+                <div class="stats-panel" id="statsPanel" style="display:none;">
+                    <strong>Statistiques</strong>
+                    <div id="statsContent"></div>
+                </div>
+                
                 <div class="control-group">
-                    <label>Actions de Test</label>
-                    <button onclick="runAllTests()">🧪 Lancer tous les tests</button>
-                    <button onclick="testVilles()">🏙️ Tester Villes</button>
-                    <button onclick="testRoutes()">🛤️ Tester Routes</button>
-                    <button onclick="testPlateau()">🗺️ Tester Plateau</button>
+                    <label>Tests Principaux</label>
+                    <button onclick="runAllTests()" style="width: 100%; margin-bottom: 8px; background: #e74c3c;">Lancer TOUS les tests</button>
+                    <div class="test-grid">
+                        <button class="test-btn" onclick="testVilleInit()">Init Ville</button>
+                        <button class="test-btn" onclick="testRoutes()">Routes</button>
+                        <button class="test-btn" onclick="testPlateau()">Plateau</button>
+                        <button class="test-btn" onclick="testPlateauInit()">Plateau Init</button>
+                    </div>
+                </div>
+                
+                <div class="control-group">
+                    <label>Tests Specialises</label>
+                    <div class="test-grid">
+                        <button class="test-btn" onclick="testPlateauInitVil()">Init Villes</button>
+                        <button class="test-btn" onclick="testPlateauRechVil()">Rech Ville</button>
+                        <button class="test-btn" onclick="testPlateauRechRou()">Rech Route</button>
+                        <button class="test-btn" onclick="runCustomTests()">Tests Custom</button>
+                    </div>
                 </div>
                 
                 <div class="control-group">
                     <label>Affichage</label>
-                    <button id="showVilles" onclick="toggleVilles()">Afficher Villes</button>
-                    <button id="showRoutes" onclick="toggleRoutes()">Afficher Routes</button>
-                    <button id="showEtats" onclick="toggleEtats()">Afficher États</button>
-                    <button onclick="clearCanvas()">🗑️ Effacer</button>
+                    <div style="display: flex; flex-wrap: wrap; gap: 5px;">
+                        <button id="showVilles" onclick="toggleVilles()">Villes</button>
+                        <button id="showRoutes" onclick="toggleRoutes()">Routes</button>
+                        <button id="showEtats" onclick="toggleEtats()">Etats</button>
+                        <button onclick="clearCanvas()">Effacer</button>
+                        <button onclick="showStats()">Stats</button>
+                    </div>
                 </div>
                 
                 <div class="control-group">
-                    <label>Informations</label>
+                    <label>Informations Detaillees</label>
                     <select id="villeSelect" onchange="showVilleInfo()">
-                        <option value="">Sélectionner une ville...</option>
+                        <option value="">Selectionner une ville...</option>
                     </select>
                     <div id="villeInfo" class="ville-info" style="display:none;"></div>
                     
                     <select id="routeSelect" onchange="showRouteInfo()">
-                        <option value="">Sélectionner une route...</option>
+                        <option value="">Selectionner une route...</option>
                     </select>
                     <div id="routeInfo" class="route-info" style="display:none;"></div>
                 </div>
@@ -166,12 +219,11 @@
         </div>
         
         <div class="test-results" id="testResults">
-            <div><strong>📋 Résultats des Tests</strong></div>
-            <div>Cliquez sur "Lancer tous les tests" pour commencer...</div>
+            <div><strong>Resultats des Tests</strong></div>
+            <div>Cliquez sur "Lancer TOUS les tests" pour commencer les verifications...</div>
         </div>
     </div>
 
-    <!-- Importation des classes JavaScript -->
     <script src="Test.js"></script>
     <script src="Ville.js"></script>
     <script src="Route.js"></script>
@@ -180,9 +232,14 @@
     <script src="Donnees.js"></script>
     <script src="Plateau.js"></script>
     <script src="Jeu.js"></script>
+    
     <script src="TestVilleInit.js"></script>
     <script src="TestRoutes.js"></script>
     <script src="TestPlateau.js"></script>
+    <script src="TestPlateauinit.js"></script>
+    <script src="TestPlateauInitVil.js"></script>
+    <script src="TestPlateaurechVil.js"></script>
+    <script src="TestPlateaurechRou.js"></script>
 
     <script>
         // Variables globales
@@ -193,28 +250,30 @@
         let showVillesFlag = false;
         let showRoutesFlag = false;
         let showEtatsFlag = false;
+        let testResults = [];
 
         // Initialisation au chargement de la page
         window.onload = function() {
             initializeGame();
             setupCanvas();
-            updateGameStatus("Jeu initialisé - Prêt à jouer!");
+            updateGameStatus("Jeu initialise - Pret a jouer!");
         };
 
         function initializeGame() {
             try {
-                // Vérifier si Donnees existe
+                // Verifier si Donnees existe
                 if (typeof Donnees !== 'undefined') {
                     plateau = new Plateau();
                     populateSelects();
-                    updateGameStatus("Plateau créé avec succès!");
+                    updateGameStatus("Plateau cree avec succes!");
                 } else {
-                    updateGameStatus("⚠️ Fichier Donnees.js manquant - Création d'un plateau de test");
+                    updateGameStatus("Fichier Donnees.js manquant - Creation d'un plateau de test");
                     createTestData();
                 }
             } catch (error) {
                 console.error("Erreur d'initialisation:", error);
-                updateGameStatus("❌ Erreur d'initialisation: " + error.message);
+                updateGameStatus("Erreur d'initialisation: " + error.message);
+                createTestData(); // Fallback
             }
         }
 
@@ -229,29 +288,42 @@
         }
 
         function createTestData() {
-            // Données de test si Donnees.js n'est pas disponible
+            // Donnees de test si Donnees.js n'est pas disponible
             window.Donnees = {
                 VILLES: [
                     "Vancouver 94.0 15.0",
                     "Seattle 88.0 52.0",
                     "Portland 72.0 78.0",
                     "San Francisco 15.0 195.0",
-                    "Los Angeles 85.0 270.0"
+                    "Los Angeles 85.0 270.0",
+                    "Phoenix 175.0 245.0",
+                    "Denver 275.0 125.0",
+                    "Chicago 415.0 95.0"
                 ],
                 ROUTES: [
                     ["Vancouver", "Seattle", "GRIS"],
                     ["Seattle", "Portland", "NOIR"],
                     ["Portland", "San Francisco", "ROSE"],
-                    ["San Francisco", "Los Angeles", "JAUNE"]
+                    ["San Francisco", "Los Angeles", "JAUNE"],
+                    ["Los Angeles", "Phoenix", "ROUGE"],
+                    ["Phoenix", "Denver", "BLANC"],
+                    ["Denver", "Chicago", "BLEU"]
                 ],
                 ETATS: [
                     ["Californie", "15,195 85,270 200,280 200,200"],
                     ["Oregon", "72,78 88,52 120,60 120,100"],
-                    ["Washington", "88,52 94,15 150,20 150,60"]
+                    ["Washington", "88,52 94,15 150,20 150,60"],
+                    ["Arizona", "175,245 200,280 300,270 300,230"],
+                    ["Colorado", "275,125 350,100 350,150 275,175"]
                 ]
             };
-            plateau = new Plateau();
-            populateSelects();
+            try {
+                plateau = new Plateau();
+                populateSelects();
+                updateGameStatus("Plateau de test cree avec succes!");
+            } catch (error) {
+                updateGameStatus("Erreur creation plateau test: " + error.message);
+            }
         }
 
         function populateSelects() {
@@ -260,52 +332,76 @@
             const villeSelect = document.getElementById('villeSelect');
             const routeSelect = document.getElementById('routeSelect');
 
-            // Vider les sélecteurs
-            villeSelect.innerHTML = '<option value="">Sélectionner une ville...</option>';
-            routeSelect.innerHTML = '<option value="">Sélectionner une route...</option>';
+            // Vider les selecteurs
+            villeSelect.innerHTML = '<option value="">Selectionner une ville...</option>';
+            routeSelect.innerHTML = '<option value="">Selectionner une route...</option>';
 
             // Ajouter les villes
-            plateau.getVilles().forEach((ville, index) => {
-                const option = document.createElement('option');
-                option.value = index;
-                option.textContent = ville.getNom();
-                villeSelect.appendChild(option);
-            });
+            try {
+                plateau.getVilles().forEach((ville, index) => {
+                    const option = document.createElement('option');
+                    option.value = index;
+                    option.textContent = ville.getNom();
+                    villeSelect.appendChild(option);
+                });
+            } catch (error) {
+                console.error("Erreur ajout villes:", error);
+            }
 
             // Ajouter les routes
-            plateau.getRoutes().forEach((route, index) => {
-                const option = document.createElement('option');
-                option.value = index;
-                option.textContent = route.getNom();
-                routeSelect.appendChild(option);
-            });
+            try {
+                plateau.getRoutes().forEach((route, index) => {
+                    const option = document.createElement('option');
+                    option.value = index;
+                    option.textContent = route.getNom();
+                    routeSelect.appendChild(option);
+                });
+            } catch (error) {
+                console.error("Erreur ajout routes:", error);
+            }
         }
 
+        // ===== FONCTIONS DE TEST =====
+        
         function runAllTests() {
             clearTestResults();
-            appendTestResult("🚀 Démarrage de tous les tests...\n");
+            testResults = [];
+            appendTestResult("Demarrage de TOUS les tests du systeme...\n");
 
-            // Override console pour capturer les résultats
+            // Override console pour capturer les resultats
             const originalLog = console.log;
             const originalError = console.error;
 
             console.log = function(message) {
                 appendTestResult(message);
+                testResults.push({type: 'log', message: message});
                 originalLog(message);
             };
 
             console.error = function(message) {
                 appendTestResult(message);
+                testResults.push({type: 'error', message: message});
                 originalError(message);
             };
 
             try {
-                testVilles();
+                // Tests principaux
+                testVilleInit();
                 testRoutes();
                 testPlateau();
-                appendTestResult("\n✅ Tous les tests terminés!");
+                testPlateauInit();
+                
+                // Tests specialises
+                testPlateauInitVil();
+                testPlateauRechVil();
+                testPlateauRechRou();
+                runCustomTests();
+                
+                appendTestResult("\nTous les tests termines!");
+                showTestSummary();
             } catch (error) {
-                appendTestResult("❌ Erreur pendant les tests: " + error.message);
+                appendTestResult("Erreur pendant les tests: " + error.message);
+                console.error(error);
             }
 
             // Restaurer console
@@ -313,40 +409,191 @@
             console.error = originalError;
         }
 
-        function testVilles() {
-            appendTestResult("\n🏙️ Tests des Villes:");
+        function testVilleInit() {
+            appendTestResult("\nTests d'initialisation des Villes:");
             try {
-                const testVilleInit = new TestVilleInitialisation();
-                testVilleInit.testeVilleInitialisation();
+                if (typeof TestVilleInitialisation !== 'undefined') {
+                    const testVilleInit = new TestVilleInitialisation();
+                    testVilleInit.testeVilleInitialisation();
+                } else {
+                    // Test basique si la classe n'existe pas
+                    const ville = new Ville("Test", 100, 200);
+                    Test.assertEquals(ville.getNom(), "Test", "Ville - nom correct");
+                    Test.assertEquals(ville.getX(), 100, "Ville - X correct");
+                    Test.assertEquals(ville.getY(), 200, "Ville - Y correct");
+                }
             } catch (error) {
-                appendTestResult("❌ Erreur test villes: " + error.message);
+                appendTestResult("Erreur test villes: " + error.message);
             }
         }
 
         function testRoutes() {
-            appendTestResult("\n🛤️ Tests des Routes:");
-            // Si TestRoutes.js est vide, créer un test basique
-            if (plateau && plateau.getRoutes().length > 0) {
-                const route = plateau.getRoutes()[0];
-                Test.assertNotEquals(route.getLongueur(), null, "Route a une longueur");
-                Test.assertNotEquals(route.getCouleur(), null, "Route a une couleur");
-                appendTestResult("✅ Tests routes basiques OK");
-            } else {
-                appendTestResult("⚠️ Aucune route à tester");
+            appendTestResult("\nTests des Routes:");
+            try {
+                if (plateau && plateau.getRoutes().length > 0) {
+                    const route = plateau.getRoutes()[0];
+                    Test.assertNotEquals(route.getLongueur(), null, "Route a une longueur");
+                    Test.assertNotEquals(route.getCouleur(), null, "Route a une couleur");
+                    Test.assertTrue(route.getLongueur() >= 1, "Longueur route >= 1");
+                    Test.assertTrue(route.getLongueur() <= 6, "Longueur route <= 6");
+                    appendTestResult("Tests routes basiques OK");
+                } else {
+                    appendTestResult("Aucune route a tester");
+                }
+            } catch (error) {
+                appendTestResult("Erreur test routes: " + error.message);
             }
         }
 
         function testPlateau() {
-            appendTestResult("\n🗺️ Tests du Plateau:");
-            if (plateau) {
-                Test.assertTrue(plateau.getVilles().length > 0, "Plateau contient des villes");
-                Test.assertTrue(plateau.getRoutes().length > 0, "Plateau contient des routes");
-                Test.assertTrue(plateau.getEtats().length > 0, "Plateau contient des états");
-                appendTestResult("✅ Tests plateau basiques OK");
-            } else {
-                appendTestResult("❌ Plateau non initialisé");
+            appendTestResult("\nTests du Plateau:");
+            try {
+                if (plateau) {
+                    Test.assertTrue(plateau.getVilles().length > 0, "Plateau contient des villes");
+                    Test.assertTrue(plateau.getRoutes().length > 0, "Plateau contient des routes");
+                    Test.assertTrue(plateau.getEtats().length > 0, "Plateau contient des etats");
+                    appendTestResult("Tests plateau basiques OK");
+                } else {
+                    appendTestResult("Plateau non initialise");
+                }
+            } catch (error) {
+                appendTestResult("Erreur test plateau: " + error.message);
             }
         }
+
+        function testPlateauInit() {
+            appendTestResult("\nTests d'initialisation du Plateau:");
+            try {
+                // Test de creation d'un nouveau plateau
+                const testPlateau = new Plateau();
+                Test.assertNotEquals(testPlateau, null, "Plateau cree avec succes");
+                Test.assertTrue(Array.isArray(testPlateau.getVilles()), "getVilles retourne un tableau");
+                Test.assertTrue(Array.isArray(testPlateau.getRoutes()), "getRoutes retourne un tableau");
+                Test.assertTrue(Array.isArray(testPlateau.getEtats()), "getEtats retourne un tableau");
+                appendTestResult("Tests initialisation plateau OK");
+            } catch (error) {
+                appendTestResult("Erreur test init plateau: " + error.message);
+            }
+        }
+
+        function testPlateauInitVil() {
+            appendTestResult("\nTests d'initialisation des Villes du Plateau:");
+            try {
+                if (plateau && plateau.getVilles().length > 0) {
+                    const villes = plateau.getVilles();
+                    Test.assertTrue(villes.length > 0, "Des villes ont ete initialisees");
+                    
+                    // Tester la premiere ville
+                    const premiereVille = villes[0];
+                    Test.assertNotEquals(premiereVille.getNom(), null, "Premiere ville a un nom");
+                    Test.assertTrue(typeof premiereVille.getX() === 'number', "X est un nombre");
+                    Test.assertTrue(typeof premiereVille.getY() === 'number', "Y est un nombre");
+                    
+                    appendTestResult(`${villes.length} villes initialisees correctement`);
+                } else {
+                    appendTestResult("Aucune ville initialisee");
+                }
+            } catch (error) {
+                appendTestResult("Erreur test init villes: " + error.message);
+            }
+        }
+
+        function testPlateauRechVil() {
+            appendTestResult("\nTests de recherche de Villes:");
+            try {
+                if (plateau && plateau.getVilles().length > 0) {
+                    const villes = plateau.getVilles();
+                    const nomTest = villes[0].getNom();
+                    
+                    const villeRecherchee = plateau.rechercheVille(nomTest);
+                    Test.assertNotEquals(villeRecherchee, null, `Ville "${nomTest}" trouvee`);
+                    Test.assertEquals(villeRecherchee.getNom(), nomTest, "Nom de ville correct");
+                    
+                    const villeInexistante = plateau.rechercheVille("VilleInexistante");
+                    Test.assertEquals(villeInexistante, undefined, "Ville inexistante non trouvee");
+                    
+                    appendTestResult("Tests recherche villes OK");
+                } else {
+                    appendTestResult("Aucune ville pour test de recherche");
+                }
+            } catch (error) {
+                appendTestResult("Erreur test recherche villes: " + error.message);
+            }
+        }
+
+        function testPlateauRechRou() {
+            appendTestResult("\nTests de recherche de Routes:");
+            try {
+                if (plateau && plateau.getRoutes().length > 0) {
+                    const routes = plateau.getRoutes();
+                    const nomTest = routes[0].getNom();
+                    
+                    const routeRecherchee = plateau.rechercheRoute(nomTest);
+                    Test.assertNotEquals(routeRecherchee, null, `Route "${nomTest}" trouvee`);
+                    Test.assertEquals(routeRecherchee.getNom(), nomTest, "Nom de route correct");
+                    
+                    const routeInexistante = plateau.rechercheRoute("Route Inexistante");
+                    Test.assertEquals(routeInexistante, undefined, "Route inexistante non trouvee");
+                    
+                    appendTestResult("Tests recherche routes OK");
+                } else {
+                    appendTestResult("Aucune route pour test de recherche");
+                }
+            } catch (error) {
+                appendTestResult("Erreur test recherche routes: " + error.message);
+            }
+        }
+
+        function runCustomTests() {
+            appendTestResult("\nTests personnalises avances:");
+            try {
+                // Tests d'integrite des donnees
+                if (plateau) {
+                    const villes = plateau.getVilles();
+                    const routes = plateau.getRoutes();
+                    
+                    // Verifier que toutes les routes connectent des villes existantes
+                    let routesValides = 0;
+                    routes.forEach(route => {
+                        const ville1 = route.getVilleDepart();
+                        const ville2 = route.getVilleArrivee();
+                        if (ville1 && ville2) {
+                            routesValides++;
+                        }
+                    });
+                    
+                    Test.assertEquals(routesValides, routes.length, "Toutes les routes sont valides");
+                    
+                    // Test des coordonnees
+                    let coordonneesValides = 0;
+                    villes.forEach(ville => {
+                        if (ville.getX() >= 0 && ville.getY() >= 0) {
+                            coordonneesValides++;
+                        }
+                    });
+                    
+                    Test.assertEquals(coordonneesValides, villes.length, "Toutes les coordonnees sont positives");
+                    
+                    appendTestResult("Tests personnalises OK");
+                }
+            } catch (error) {
+                appendTestResult("Erreur tests personnalises: " + error.message);
+            }
+        }
+
+        function showTestSummary() {
+            const successes = testResults.filter(r => r.message.includes('OK')).length; // Changed to 'OK' as checkmark is removed
+            const errors = testResults.filter(r => r.message.includes('Erreur')).length; // Changed to 'Erreur' as cross is removed
+            const warnings = testResults.filter(r => r.message.includes('Aucune') || r.message.includes('manquant')).length; // Changed to 'Aucune' or 'manquant' as warning sign is removed
+            
+            appendTestResult(`\nRESUME DES TESTS:`);
+            appendTestResult(`Succes: ${successes}`);
+            appendTestResult(`Erreurs: ${errors}`);
+            appendTestResult(`Avertissements: ${warnings}`);
+            appendTestResult(`Total: ${successes + errors + warnings} tests executes`);
+        }
+
+        // ===== FONCTIONS DE VISUALISATION =====
 
         function toggleVilles() {
             showVillesFlag = !showVillesFlag;
@@ -366,12 +613,31 @@
             drawGame();
         }
 
+        function showStats() {
+            const panel = document.getElementById('statsPanel');
+            const content = document.getElementById('statsContent');
+            
+            if (plateau) {
+                const villes = plateau.getVilles();
+                const routes = plateau.getRoutes();
+                const etats = plateau.getEtats();
+                
+                content.innerHTML = `
+                    Villes: ${villes.length}<br>
+                    Routes: ${routes.length}<br>
+                    Etats: ${etats.length}<br>
+                    Tests executes: ${Test.testCount}
+                `;
+                panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
+            }
+        }
+
         function drawGame() {
             clearCanvas();
 
             if (!plateau) return;
 
-            // Dessiner les états
+            // Dessiner les etats
             if (showEtatsFlag) {
                 plateau.getEtats().forEach(etat => {
                     drawEtat(etat);
@@ -470,8 +736,8 @@
             const ville = plateau.getVilles()[select.value];
             infoDiv.innerHTML = `
                 <strong>${ville.getNom()}</strong><br>
-                Coordonnées: (${ville.getX()}, ${ville.getY()})<br>
-                Représentation: ${ville.versChaine()}
+                Coordonnees: (${ville.getX()}, ${ville.getY()})<br>
+                Representation: ${ville.versChaine()}
             `;
             infoDiv.style.display = 'block';
         }
@@ -491,18 +757,28 @@
                 Couleur: ${route.getCouleur()}<br>
                 Longueur: ${route.getLongueur()}<br>
                 Points: ${route.getNombrePoints()}<br>
-                Détails: ${route.versChaine()}
+                Details: ${route.versChaine()}
             `;
             infoDiv.style.display = 'block';
         }
 
         function clearTestResults() {
-            document.getElementById('testResults').innerHTML = '<div><strong>📋 Résultats des Tests</strong></div>';
+            document.getElementById('testResults').innerHTML = '<div><strong>Resultats des Tests</strong></div>';
         }
 
         function appendTestResult(message) {
             const resultsDiv = document.getElementById('testResults');
             const messageDiv = document.createElement('div');
+            
+            // Appliquer des classes CSS selon le type de message
+            if (message.includes('OK')) {
+                messageDiv.className = 'success';
+            } else if (message.includes('Erreur')) {
+                messageDiv.className = 'error';
+            } else if (message.includes('Aucune') || message.includes('manquant')) {
+                messageDiv.className = 'warning';
+            }
+            
             messageDiv.textContent = message;
             resultsDiv.appendChild(messageDiv);
             resultsDiv.scrollTop = resultsDiv.scrollHeight;
